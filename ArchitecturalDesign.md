@@ -95,3 +95,9 @@ The linter should be able to add checks without modifying existing code.
 - Pushing to main branch is not allowed without approval of teammate
 - Must be a Maven Project
 - Must use ASM to read Bytecode
+
+---
+
+## Reference Architecture
+
+- Our project will use the rich client reference architecture 
