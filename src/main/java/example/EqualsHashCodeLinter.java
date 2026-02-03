@@ -23,7 +23,11 @@ public class EqualsHashCodeLinter {
         }
         boolean throwError = (hasEquals && !hasHashCode || !hasEquals && hasHashCode);
         if (throwError) {
-            System.err.println("Error in EqualsHashCodeLinter for: " + classNode.name);
+            if(hasEquals){
+                System.err.println(classNode.name + " has equals method but no hashCode method!");
+            }else{
+                System.err.println(classNode.name + " has hashCode method but no equals method!");
+            }
         }else{
             System.out.println("No error in EqualsHashCodeLinter for: " + classNode.name);
         }
