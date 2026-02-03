@@ -3,7 +3,7 @@ package example;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 
-public class EqualsHashCodeLinter {
+public class EqualsHashCodeLinter implements  CheckstyleLinterInterface {
 
     private final ClassNode classNode;
     private boolean hasEquals = false;

@@ -5,6 +5,8 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
 
@@ -25,117 +27,19 @@ public class MyFirstLinter {
 	 * @throws ClassNotFoundException
 	 */
 	public static void main(String[] args) throws IOException {
-		// TODO: Learn how to create separate Run Configurations so you can run
-		// 		 your code on different programs without changing the code each time.
-		//		 Otherwise, you will just see your program runs without any output.
-		System.out.println("MyFirstLinter starting...");
-		for (String className : args) {
-			// One way to read in a Java class with ASM:
-			// Step 1. ASM's ClassReader does the heavy lifting of parsing the compiled Java class.
-			ClassReader reader = new ClassReader(className);
-
-			// Step 2. ClassNode is just a data container for the parsed class
-			ClassNode classNode = new ClassNode();
-
-			// Step 3. Tell the Reader to parse the specified class and store its data in our ClassNode.
-			// EXPAND_FRAMES means: I want my code to work. (Always pass this flag.)
-			reader.accept(classNode, ClassReader.EXPAND_FRAMES);
-
-			// Now we can navigate the classNode and look for things we are interested in.
-			printClass(classNode);
-
-			printFields(classNode);
-			
-			printMethods(classNode);
-		}
-	}
-
-	private static void printClass(ClassNode classNode) {
-		System.out.println("Class's Internal JVM name: " + classNode.name);
-		System.out.println("User-friendly name: "
-				+ Type.getObjectType(classNode.name).getClassName());
-		System.out.println("public? "
-				+ ((classNode.access & Opcodes.ACC_PUBLIC) != 0));
-		System.out.println("Extends: " + classNode.superName);
-		System.out.println("Implements: " + classNode.interfaces);
-		// TODO: how do I write a lint check to tell if this class has a bad name?
-	}
-
-	private static void printFields(ClassNode classNode) {
-		// Print all fields (note the cast; ASM doesn't store generic data with its Lists)
-		List<FieldNode> fields = (List<FieldNode>) classNode.fields;
-		for (FieldNode field : fields) {
-			System.out.println("	Field: " + field.name);
-			System.out.println("	Internal JVM type: " + field.desc);
-			System.out.println("	User-friendly type: "
-					+ Type.getObjectType(field.desc).getClassName());
-			// Query the access modifiers with the ACC_* constants.
-
-			System.out.println("	public? "
-					+ ((field.access & Opcodes.ACC_PUBLIC) != 0));
-			// TODO: how do you tell if something has package-private access? (ie no access modifiers?)
-			
-			// TODO: how do I write a lint check to tell if this field has a bad name?
-			
-			System.out.println();
-		}
-	}
-
-	private static void printMethods(ClassNode classNode) {
-		List<MethodNode> methods = (List<MethodNode>) classNode.methods;
-		for (MethodNode method : methods) {
-			System.out.println("	Method: " + method.name);
-			System.out
-					.println("	Internal JVM method signature: " + method.desc);
-
-			System.out.println("	Return type: "
-					+ Type.getReturnType(method.desc).getClassName());
-
-			System.out.println("	Args: ");
-			for (Type argType : Type.getArgumentTypes(method.desc)) {
-				System.out.println("		" + argType.getClassName());
-				// FIXME: what is the argument's *variable* name?
+		String equalsHashCodeConfig = "src/main/java/example/EqualsHashCodeLinterConfig";
+		try (BufferedReader reader = new BufferedReader(new FileReader(equalsHashCodeConfig))) {
+			String line;
+			while ((line = reader.readLine()) != null) {
+				ClassReader classReader = new ClassReader(line);
+				ClassNode classNode = new ClassNode();
+				classReader.accept(classNode, ClassReader.EXPAND_FRAMES);
+				EqualsHashCodeLinter ehcLinter = new EqualsHashCodeLinter(classNode);
+				ehcLinter.lintClass();
 			}
-
-			System.out.println("	public? "
-					+ ((method.access & Opcodes.ACC_PUBLIC) != 0));
-			System.out.println("	static? "
-					+ ((method.access & Opcodes.ACC_STATIC) != 0));
-			// How do you tell if something has default access? (ie no access modifiers?)
-
-			System.out.println();
-
-			// Print the method's instructions
-			printInstructions(method);
-		}
-	}
-
-	private static void printInstructions(MethodNode methodNode) {
-		InsnList instructions = methodNode.instructions;
-		for (int i = 0; i < instructions.size(); i++) {
-
-			// We don't know immediately what kind of instruction we have.
-			AbstractInsnNode insn = instructions.get(i);
-
-			// FIXME: Is instanceof the best way to deal with the instruction's type?
-			if (insn instanceof MethodInsnNode) {
-				// A method call of some sort; what other useful fields does this object have?
-				MethodInsnNode methodCall = (MethodInsnNode) insn;
-				System.out.println("		Call method: " + methodCall.owner + " "
-						+ methodCall.name);
-			} else if (insn instanceof VarInsnNode) {
-				// Some some kind of variable *LOAD or *STORE operation.
-				VarInsnNode varInsn = (VarInsnNode) insn;
-				int opCode = varInsn.getOpcode();
-				// See VarInsnNode.setOpcode for the list of possible values of
-				// opCode. These are from a variable-related subset of Java
-				// opcodes.
-			}
-			// There are others...
-			// This list of direct known subclasses may be useful:
-			// http://asm.ow2.org/asm50/javadoc/user/org/objectweb/asm/tree/AbstractInsnNode.html
-			
-			// TODO: how do I write a lint check to tell if this method has a bad name?
+		} catch (IOException e) {
+			System.err.println("Error reading file: " + e.getMessage());
+			e.printStackTrace();
 		}
 	}
 }
