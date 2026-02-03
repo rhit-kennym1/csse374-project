@@ -13,6 +13,11 @@ public class EqualsHashCodeLinter implements  CheckstyleLinterInterface {
         this.classNode = classNode;
     }
     public void lintClass() {
+        checkForMethods();
+        logError();
+    }
+
+    private void checkForMethods() {
         for (MethodNode methodNode : this.classNode.methods) {
             if (methodNode.name.equals("equals")) {
                 hasEquals = true;
@@ -21,6 +26,9 @@ public class EqualsHashCodeLinter implements  CheckstyleLinterInterface {
                 hasHashCode = true;
             }
         }
+    }
+
+    private void logError() {
         boolean throwError = (hasEquals && !hasHashCode || !hasEquals && hasHashCode);
         if (throwError) {
             if(hasEquals){
