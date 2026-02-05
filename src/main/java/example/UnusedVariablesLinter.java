@@ -13,7 +13,7 @@ public class UnusedVariablesLinter implements  CheckstyleLinterInterface {
     
 	@Override
 	public void lintClass() {
-		// TODO Auto-generated method stub
+		// TODO Auto-generated method stu
 		
 	}
 }
