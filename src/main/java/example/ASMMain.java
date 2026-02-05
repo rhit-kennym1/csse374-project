@@ -23,6 +23,9 @@ public class ASMMain {
 
 		String ocpConfig = "src/main/java/example/OpenClosedPrincipleLinterConfig";
 		runLinterFromConfig(ocpConfig, LinterType.PRINCIPLE, "OpenClosedPrinciple");
+
+		String decoratorConfig = "src/main/java/example/DecoratorLinterConfig";
+		runLinterFromConfig(decoratorConfig, LinterType.PATTERN, "DecoratorPattern");
 	}
 
 	private enum LinterType {
@@ -48,6 +51,8 @@ public class ASMMain {
 					((CheckstyleLinterInterface) linter).lintClass();
 				} else if (linter instanceof PrincipleLinterInterface) {
 					((PrincipleLinterInterface) linter).lintClass();
+				} else if (linter instanceof PatternLinterInterface) {
+					((PatternLinterInterface) linter).lintClass();
 				}
 			}
 		} catch (IOException e) {
@@ -88,6 +93,8 @@ public class ASMMain {
 
 	private static PatternLinterInterface createPatternLinter(String name, ClassNode classNode) {
 		switch (name) {
+			case "DecoratorPattern":
+				return new DecoratorPatternLinter(classNode);
 			default:
 				return null;
 		}
