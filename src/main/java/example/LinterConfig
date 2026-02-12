@@ -1,0 +1,4 @@
+#Format for config is Linter: class1, class2 etc 
+#Linter checks are EqualsHashCode... (TODO add all linter checks in this line)
+
+EqualsHashCode: testclasses.example.ExampleClass,java.lang.String, example.ASMMain

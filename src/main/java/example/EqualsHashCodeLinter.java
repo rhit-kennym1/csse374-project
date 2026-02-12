@@ -3,8 +3,7 @@ package example;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 
-public class EqualsHashCodeLinter implements  CheckstyleLinterInterface {
-
+public class EqualsHashCodeLinter implements Linter {
     private final ClassNode classNode;
     private boolean hasEquals = false;
     private boolean hasHashCode = false;
@@ -12,6 +11,13 @@ public class EqualsHashCodeLinter implements  CheckstyleLinterInterface {
     public EqualsHashCodeLinter(ClassNode classNode) {
         this.classNode = classNode;
     }
+
+    @Override
+    public LinterType getType() {
+        return LinterType.CHECKSTYLE;
+    }
+
+    @Override
     public void lintClass() {
         checkForMethods();
         logError();
@@ -31,12 +37,12 @@ public class EqualsHashCodeLinter implements  CheckstyleLinterInterface {
     private void logError() {
         boolean throwError = (hasEquals && !hasHashCode || !hasEquals && hasHashCode);
         if (throwError) {
-            if(hasEquals){
+            if (hasEquals) {
                 System.err.println(classNode.name + " has equals method but no hashCode method!");
-            }else{
+            } else {
                 System.err.println(classNode.name + " has hashCode method but no equals method!");
             }
-        }else{
+        } else {
             System.out.println("No error in EqualsHashCodeLinter for: " + classNode.name);
         }
     }
