@@ -10,7 +10,7 @@ import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
 public class SingleResponsibilityPrincipleLinter
-        implements PrincipleLinterInterface {
+        implements Linter {
 
     private ClassNode classNode;
     private List<String> warnings = new ArrayList<>();
@@ -22,7 +22,12 @@ public class SingleResponsibilityPrincipleLinter
     public SingleResponsibilityPrincipleLinter(ClassNode classNode) {
         this.classNode = classNode;
     }
-
+    
+    @Override
+    public LinterType getType() {
+        return LinterType.PRINCIPLE;
+    }
+    
     @Override
     public void lintClass() {
 

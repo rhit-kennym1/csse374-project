@@ -9,13 +9,18 @@ import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
-public class ObserverPatternLinter implements PatternLinterInterface {
+public class ObserverPatternLinter implements Linter {
 
     private ClassNode classNode;
     private List<String> warnings = new ArrayList<>();
 
     public ObserverPatternLinter(ClassNode classNode) {
         this.classNode = classNode;
+    }
+    
+    @Override
+    public LinterType getType() {
+        return LinterType.PATTERN;
     }
 
     @Override

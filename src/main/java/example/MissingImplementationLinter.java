@@ -6,7 +6,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 
-public class MissingImplementationLinter implements CheckstyleLinterInterface {
+public class MissingImplementationLinter implements Linter {
 
     private ClassNode classNode;
     private Map<String, ClassNode> classMap;
@@ -16,6 +16,11 @@ public class MissingImplementationLinter implements CheckstyleLinterInterface {
             Map<String, ClassNode> classMap) {
         this.classNode = classNode;
         this.classMap = classMap;
+    }
+    
+    @Override
+    public LinterType getType() {
+        return LinterType.CHECKSTYLE;
     }
 
     @Override

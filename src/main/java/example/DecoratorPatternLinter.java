@@ -6,7 +6,7 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 
-public class DecoratorPatternLinter implements PatternLinterInterface {
+public class DecoratorPatternLinter implements Linter {
 
     private final ClassNode classNode;
 
@@ -28,6 +28,11 @@ public class DecoratorPatternLinter implements PatternLinterInterface {
         logError();
     }
 
+    @Override
+    public LinterType getType() {
+        return LinterType.PATTERN;
+    }
+    
     private void checkForViolations() {
         checkIfLooksLikeDecorator();
 

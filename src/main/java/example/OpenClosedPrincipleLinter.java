@@ -6,7 +6,7 @@ import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 import java.util.List;
 
-public class OpenClosedPrincipleLinter implements PrincipleLinterInterface {
+public class OpenClosedPrincipleLinter implements Linter {
 
     private final ClassNode classNode;
     private boolean shouldBeFinal = false;
@@ -25,6 +25,11 @@ public class OpenClosedPrincipleLinter implements PrincipleLinterInterface {
     public void lintClass() {
         checkForViolations();
         logError();
+    }
+    
+    @Override
+    public LinterType getType() {
+        return LinterType.PRINCIPLE;
     }
 
     private void checkForViolations() {
