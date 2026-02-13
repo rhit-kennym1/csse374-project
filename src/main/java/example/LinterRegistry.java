@@ -13,6 +13,7 @@ public class LinterRegistry{
         register("DeadCode", DeadCodeLinter::new);
         register("OpenClosedPrinciple", OpenClosedPrincipleLinter::new);
         register("DecoratorPattern", DecoratorPatternLinter::new);
+        register("DemeterPrinciple", LawOfDemeterPrinciple::new);
     }
 
     public static void register(String name, Function<ClassNode, Linter> constructor) {
