@@ -11,6 +11,7 @@ public class LinterRegistry {
     static {
         register("EqualsHashCode", EqualsHashCodeLinter::new);
         register("DeadCode", DeadCodeLinter::new);
+        register("UnusedVariables", UnusedVariablesLinter::new);
         register("OpenClosedPrinciple", OpenClosedPrincipleLinter::new);
         register("DecoratorPattern", DecoratorPatternLinter::new);
         register("DemeterPrinciple", LawOfDemeterPrinciple::new);
