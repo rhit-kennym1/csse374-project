@@ -16,8 +16,10 @@ public class ASMMain {
         try (BufferedReader reader = new BufferedReader(new FileReader(CONFIG_PATH))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                if (line.trim().isEmpty()) continue;
-                if (line.trim().startsWith("#")) continue;
+                if (line.trim().isEmpty())
+                    continue;
+                if (line.trim().startsWith("#"))
+                    continue;
                 processConfigLine(line);
             }
         } catch (IOException e) {
@@ -37,7 +39,8 @@ public class ASMMain {
 
         for (String className : classNames) {
             className = className.trim();
-            if (className.isEmpty()) continue;
+            if (className.isEmpty())
+                continue;
             runLinter(linterName, className);
         }
     }
