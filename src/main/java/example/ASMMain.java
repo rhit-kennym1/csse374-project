@@ -59,7 +59,7 @@ public class ASMMain {
 
     private static ClassNode loadClass(String className) throws IOException {
         // Try loading from resources first
-        String resourcePath = "/testclasses/" + className.replace('.', '/') + ".class";
+        String resourcePath = "../test/resources/testclasses/" + className.replace('.', '/') + ".class";
         InputStream is = ASMMain.class.getResourceAsStream(resourcePath);
 
         ClassReader classReader;
