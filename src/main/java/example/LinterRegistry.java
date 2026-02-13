@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-public class LinterRegistry{
+public class LinterRegistry {
     private static final Map<String, Function<ClassNode, Linter>> linters = new HashMap<>();
 
     static {
@@ -14,6 +14,7 @@ public class LinterRegistry{
         register("OpenClosedPrinciple", OpenClosedPrincipleLinter::new);
         register("DecoratorPattern", DecoratorPatternLinter::new);
         register("DemeterPrinciple", LawOfDemeterPrinciple::new);
+        register("ObserverPattern", ObserverPatternLinter::new);
     }
 
     public static void register(String name, Function<ClassNode, Linter> constructor) {

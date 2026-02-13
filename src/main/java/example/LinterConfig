@@ -3,3 +3,4 @@
 
 EqualsHashCode: testclasses.example.ExampleClass,java.lang.String, example.ASMMain
 DemeterPrinciple: testclasses.example.TestLawOfDemeter
+ObserverPattern: testclasses.example.TestObserverPattern

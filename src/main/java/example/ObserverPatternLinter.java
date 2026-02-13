@@ -17,7 +17,7 @@ public class ObserverPatternLinter implements Linter {
     public ObserverPatternLinter(ClassNode classNode) {
         this.classNode = classNode;
     }
-    
+
     @Override
     public LinterType getType() {
         return LinterType.PATTERN;
@@ -30,6 +30,8 @@ public class ObserverPatternLinter implements Linter {
 
         if (hasObserverList && hasNotify) {
             warnings.add("[Observer] Possible Subject: " + classNode.name);
+        } else {
+            warnings.add("[Observer] Observer pattern detected succesfully: " + classNode.name);
         }
 
         warnings.forEach(System.out::println);
