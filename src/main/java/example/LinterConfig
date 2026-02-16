@@ -1,6 +1,16 @@
 #Format for config is Linter: class1, class2 etc 
 #Linter checks are EqualsHashCode... (TODO add all linter checks in this line)
 
-EqualsHashCode: testclasses.example.ExampleClass,java.lang.String, example.ASMMain
+EqualsHashCode: testclasses.example.TestEqualsHashCode
 DemeterPrinciple: testclasses.example.TestLawOfDemeter
 ObserverPattern: testclasses.example.TestObserverPattern
+DecoratorPattern: testclasses.example.TestDecoratorPattern$ValidDecorator
+DecoratorPattern: testclasses.example.TestDecoratorPattern$BadDecoratorPublic
+DecoratorPattern: testclasses.example.TestDecoratorPattern$BadDecoratorNonFinal
+DecoratorPattern: testclasses.example.TestDecoratorPattern$BadDecoratorNoConstructor
+DecoratorPattern: testclasses.example.TestDecoratorPattern$BadDecoratorWrongInterface
+OpenClosedPrinciple: testclasses.example.TestOpenClosedPrinciple$CreditCardProcessor
+OpenClosedPrinciple: testclasses.example.TestOpenClosedPrinciple$Account
+OpenClosedPrinciple: testclasses.example.TestOpenClosedPrinciple$DataManager
+OpenClosedPrinciple: testclasses.example.TestOpenClosedPrinciple$Calculator
+OpenClosedPrinciple: testclasses.example.TestOpenClosedPrinciple$BaseProcessor

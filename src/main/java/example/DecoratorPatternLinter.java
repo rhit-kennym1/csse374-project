@@ -6,242 +6,218 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class DecoratorPatternLinter implements Linter {
 
     private final ClassNode classNode;
 
-    private boolean looksLikeDecorator = false;
-    private String wrappedFieldName = "";
-    private String wrappedFieldType = "";
-
-    private boolean wrappedComponentIsPublic = false;
-    private boolean noConstructorWithComponent = false;
-    private boolean wrappedComponentNotFinal = false;
-    private boolean doesNotImplementCommonInterface = false;
-
     public DecoratorPatternLinter(ClassNode classNode) {
         this.classNode = classNode;
-    }
-
-    public void lintClass() {
-        checkForViolations();
-        logError();
     }
 
     @Override
     public LinterType getType() {
         return LinterType.PATTERN;
     }
-    
-    private void checkForViolations() {
-        checkIfLooksLikeDecorator();
 
-        if (looksLikeDecorator) {
-            checkWrappedComponentEncapsulation();
-            checkForConstructorWithComponent();
-            checkForCommonInterface();
+    @Override
+    public void lintClass() {
+        List<String> violations = new ArrayList<>();
+        DecoratorAnalysis analysis = analyzeForDecoratorPattern();
+        if (!analysis.looksLikeDecorator) {
+            System.out.println("No error in DecoratorPatternLinter for: " + classNode.name);
+            return;
+        }
+        if (analysis.wrappedField == null) {
+            violations.add(classNode.name + " appears to be a decorator but has no wrapped component field!");
+        } else {
+            if (analysis.wrappedComponentIsPublic) {
+                violations.add(classNode.name + " exposes its wrapped component publicly (field: " +
+                        analysis.wrappedField.name + ")");
+            }
+            if (!analysis.wrappedComponentIsFinal) {
+                violations.add(classNode.name + " has a wrapped component field that is not final (field: " +
+                        analysis.wrappedField.name + ")");
+            }
+            if (!analysis.hasConstructorWithComponent) {
+                violations.add(classNode.name + " lacks a constructor that accepts the component to wrap!");
+            }
+            if (!analysis.sharesInterfaceWithComponent) {
+                violations.add(classNode.name + " does not implement the same interface/superclass as its wrapped component!");
+            }
+        }
+        if (violations.isEmpty()) {
+            System.out.println("No error in DecoratorPatternLinter for: " + classNode.name);
+        } else {
+            for (String violation : violations) {
+                System.err.println(violation);
+            }
         }
     }
 
-    private void checkIfLooksLikeDecorator() {
+    private DecoratorAnalysis analyzeForDecoratorPattern() {
+        DecoratorAnalysis analysis = new DecoratorAnalysis();
         boolean hasDecoratorInName = classNode.name.toLowerCase().contains("decorator") ||
                 classNode.name.toLowerCase().contains("wrapper");
-
-        if (!hasDecoratorInName) {
-            boolean extendsDecorator = false;
-            if (classNode.superName != null) {
-                String superName = classNode.superName.toLowerCase();
-                extendsDecorator = superName.contains("decorator") ||
-                        superName.contains("wrapper") ||
-                        superName.equals("java/io/filterinputstream") ||
-                        superName.equals("java/io/filteroutputstream") ||
-                        superName.equals("java/io/filterreader") ||
-                        superName.equals("java/io/filterwriter");
-            }
-
-            if (!extendsDecorator) {
-                return;
-            }
+        boolean extendsDecoratorClass = false;
+        if (classNode.superName != null) {
+            String superName = classNode.superName.toLowerCase();
+            extendsDecoratorClass = superName.contains("decorator") ||
+                    superName.contains("wrapper") ||
+                    superName.equals("java/io/filterinputstream") ||
+                    superName.equals("java/io/filteroutputstream") ||
+                    superName.equals("java/io/filterreader") ||
+                    superName.equals("java/io/filterwriter");
         }
-
+        if (!hasDecoratorInName && !extendsDecoratorClass) {
+            return analysis;
+        }
         boolean implementsInterface = classNode.interfaces != null && !classNode.interfaces.isEmpty();
-        boolean extendsAbstractClass = classNode.superName != null && !classNode.superName.equals("java/lang/Object");
+        boolean extendsNonObject = classNode.superName != null &&
+                !classNode.superName.equals("java/lang/Object");
 
-        if (!implementsInterface && !extendsAbstractClass) {
-            return;
+        if (!implementsInterface && !extendsNonObject) {
+            return analysis;
         }
 
-        boolean hasWrappableField = false;
+        FieldNode wrappedField = findWrappedComponentField();
 
+        if (wrappedField == null) {
+            analysis.looksLikeDecorator = true;
+            return analysis;
+        }
+
+        analysis.looksLikeDecorator = true;
+        analysis.wrappedField = wrappedField;
+        analysis.wrappedComponentIsPublic = (wrappedField.access & Opcodes.ACC_PUBLIC) != 0 ||
+                hasPublicGetterForField(wrappedField);
+        analysis.wrappedComponentIsFinal = (wrappedField.access & Opcodes.ACC_FINAL) != 0;
+        analysis.hasConstructorWithComponent = hasConstructorAcceptingComponent(wrappedField);
+        analysis.sharesInterfaceWithComponent = sharesInterfaceWithComponent(wrappedField);
+        return analysis;
+    }
+
+    private FieldNode findWrappedComponentField() {
         for (FieldNode field : classNode.fields) {
-            boolean isStatic = (field.access & Opcodes.ACC_STATIC) != 0;
+            if ((field.access & Opcodes.ACC_STATIC) != 0) {
+                continue;
+            }
+            Type fieldType = Type.getType(field.desc);
+            if (fieldType.getSort() != Type.OBJECT && fieldType.getSort() != Type.ARRAY) {
+                continue;
+            }
+            String fieldTypeInternal = fieldType.getInternalName();
+            if (classNode.interfaces != null) {
+                for (String iface : classNode.interfaces) {
+                    if (fieldTypeInternal.equals(iface)) {
+                        return field;
+                    }
+                }
+            }
+            if (classNode.superName != null &&
+                    !classNode.superName.equals("java/lang/Object") &&
+                    fieldTypeInternal.equals(classNode.superName)) {
+                return field;
+            }
+            if (classNode.superName != null && classNode.superName.contains("Filter")) {
+                if (fieldTypeInternal.contains("InputStream") ||
+                        fieldTypeInternal.contains("OutputStream") ||
+                        fieldTypeInternal.contains("Reader") ||
+                        fieldTypeInternal.contains("Writer")) {
+                    return field;
+                }
+            }
+        }
 
-            if (isStatic) {
+        return null;
+    }
+
+    private boolean hasPublicGetterForField(FieldNode field) {
+        Type fieldType = Type.getType(field.desc);
+        String fieldTypeDesc = fieldType.getDescriptor();
+
+        for (MethodNode method : classNode.methods) {
+            if ((method.access & Opcodes.ACC_PUBLIC) == 0) {
+                continue;
+            }
+            Type returnType = Type.getReturnType(method.desc);
+            if (!returnType.getDescriptor().equals(fieldTypeDesc)) {
+                continue;
+            }
+            String methodNameLower = method.name.toLowerCase();
+            String fieldNameLower = field.name.toLowerCase();
+
+            if (methodNameLower.equals("get" + fieldNameLower) ||
+                    methodNameLower.equals(fieldNameLower) ||
+                    methodNameLower.contains("component") ||
+                    methodNameLower.contains("wrapped") ||
+                    methodNameLower.contains("delegate")) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean hasConstructorAcceptingComponent(FieldNode wrappedField) {
+        Type fieldType = Type.getType(wrappedField.desc);
+        String fieldTypeInternal = fieldType.getInternalName();
+
+        for (MethodNode method : classNode.methods) {
+            if (!method.name.equals("<init>")) {
                 continue;
             }
 
-            Type fieldType = Type.getType(field.desc);
-            String fieldTypeInternal = fieldType.getInternalName();
+            Type[] argTypes = Type.getArgumentTypes(method.desc);
 
-            boolean fieldMatchesInterface = false;
-            if (implementsInterface) {
-                for (String iface : classNode.interfaces) {
-                    if (fieldTypeInternal.equals(iface)) {
-                        fieldMatchesInterface = true;
-                        break;
-                    }
-                }
-            }
-
-            boolean fieldMatchesSuperclass = fieldTypeInternal.equals(classNode.superName);
-
-            boolean isKnownDecoratorComponentType =
-                    (classNode.superName != null && classNode.superName.contains("Filter")) &&
-                            (fieldTypeInternal.contains("InputStream") ||
-                                    fieldTypeInternal.contains("OutputStream") ||
-                                    fieldTypeInternal.contains("Reader") ||
-                                    fieldTypeInternal.contains("Writer"));
-
-            if (fieldMatchesInterface || fieldMatchesSuperclass || isKnownDecoratorComponentType) {
-                hasWrappableField = true;
-                wrappedFieldName = field.name;
-                wrappedFieldType = fieldTypeInternal;
-                break;
-            }
-        }
-
-        if (!hasWrappableField) {
-            return;
-        }
-
-        looksLikeDecorator = true;
-    }
-
-    private void checkWrappedComponentEncapsulation() {
-        for (FieldNode field : classNode.fields) {
-            if (field.name.equals(wrappedFieldName)) {
-                boolean isPublic = (field.access & Opcodes.ACC_PUBLIC) != 0;
-                boolean isFinal = (field.access & Opcodes.ACC_FINAL) != 0;
-
-                if (isPublic) {
-                    wrappedComponentIsPublic = true;
-                }
-
-                if (!isFinal) {
-                    wrappedComponentNotFinal = true;
-                }
-
-                break;
-            }
-        }
-
-        for (MethodNode method : classNode.methods) {
-            boolean isPublic = (method.access & Opcodes.ACC_PUBLIC) != 0;
-
-            if (isPublic) {
-                Type returnType = Type.getReturnType(method.desc);
-                String returnTypeInternal = returnType.getInternalName();
-
-                if (returnTypeInternal.equals(wrappedFieldType)) {
-                    String methodNameLower = method.name.toLowerCase();
-
-                    if (methodNameLower.startsWith("get") ||
-                            methodNameLower.contains("component") ||
-                            methodNameLower.contains("wrapped") ||
-                            methodNameLower.equals(wrappedFieldName)) {
-                        wrappedComponentIsPublic = true;
-                    }
-                }
-            }
-        }
-    }
-
-    private void checkForConstructorWithComponent() {
-        boolean hasAppropriateConstructor = false;
-
-        for (MethodNode method : classNode.methods) {
-            if (method.name.equals("<init>")) {
-                Type[] argTypes = Type.getArgumentTypes(method.desc);
-
-                for (Type argType : argTypes) {
+            for (Type argType : argTypes) {
+                if (argType.getSort() == Type.OBJECT || argType.getSort() == Type.ARRAY) {
                     String argTypeInternal = argType.getInternalName();
 
-                    if (argTypeInternal.equals(wrappedFieldType)) {
-                        hasAppropriateConstructor = true;
-                        break;
+                    if (argTypeInternal.equals(fieldTypeInternal)) {
+                        return true;
                     }
-
                     if (classNode.interfaces != null) {
                         for (String iface : classNode.interfaces) {
                             if (argTypeInternal.equals(iface)) {
-                                hasAppropriateConstructor = true;
-                                break;
+                                return true;
                             }
                         }
                     }
                 }
-
-                if (hasAppropriateConstructor) {
-                    break;
-                }
             }
         }
 
-        if (!hasAppropriateConstructor) {
-            noConstructorWithComponent = true;
-        }
+        return false;
     }
 
-    private void checkForCommonInterface() {
-        boolean hasCommonInterface = false;
-
+    private boolean sharesInterfaceWithComponent(FieldNode wrappedField) {
+        Type fieldType = Type.getType(wrappedField.desc);
+        String fieldTypeInternal = fieldType.getInternalName();
         if (classNode.interfaces != null) {
             for (String iface : classNode.interfaces) {
-                if (wrappedFieldType.equals(iface)) {
-                    hasCommonInterface = true;
-                    break;
+                if (fieldTypeInternal.equals(iface)) {
+                    return true;
                 }
             }
         }
-
-        if (wrappedFieldType.equals(classNode.superName)) {
-            hasCommonInterface = true;
+        if (classNode.superName != null &&
+                !classNode.superName.equals("java/lang/Object") &&
+                fieldTypeInternal.equals(classNode.superName)) {
+            return true;
         }
 
-        if (!hasCommonInterface) {
-            doesNotImplementCommonInterface = true;
-        }
+        return false;
     }
 
-    private void logError() {
-        if (!looksLikeDecorator) {
-            System.out.println("No error in DecoratorPatternLinter for: " + classNode.name);
-            return;
-        }
-
-        boolean hasViolations = wrappedComponentIsPublic ||
-                noConstructorWithComponent ||
-                wrappedComponentNotFinal ||
-                doesNotImplementCommonInterface;
-
-        if (hasViolations) {
-            if (wrappedComponentIsPublic) {
-                System.err.println(classNode.name + " exposes its wrapped component publicly!");
-            }
-
-            if (wrappedComponentNotFinal) {
-                System.err.println(classNode.name + " has a wrapped component field that is not final!");
-            }
-
-            if (noConstructorWithComponent) {
-                System.err.println(classNode.name + " lacks a constructor that accepts the component to wrap!");
-            }
-
-            if (doesNotImplementCommonInterface) {
-                System.err.println(classNode.name + " does not share a common interface with its wrapped component!");
-            }
-        } else {
-            System.out.println("No error in DecoratorPatternLinter for: " + classNode.name);
-        }
+    private static class DecoratorAnalysis {
+        boolean looksLikeDecorator = false;
+        FieldNode wrappedField = null;
+        boolean wrappedComponentIsPublic = false;
+        boolean wrappedComponentIsFinal = false;
+        boolean hasConstructorWithComponent = false;
+        boolean sharesInterfaceWithComponent = false;
     }
 }
