@@ -16,6 +16,7 @@ public class LinterRegistry {
         register("DecoratorPattern", DecoratorPatternLinter::new);
         register("DemeterPrinciple", LawOfDemeterPrinciple::new);
         register("ObserverPattern", ObserverPatternLinter::new);
+        register("FeatureEnvy", FeatureEnvyLinter::new);
     }
 
     public static void register(String name, Function<ClassNode, Linter> constructor) {
