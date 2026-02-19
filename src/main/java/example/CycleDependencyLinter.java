@@ -176,10 +176,10 @@ public class CycleDependencyLinter implements Linter {
         if (sccs.isEmpty()) {
             System.out.println("No cyclic dependencies detected");
         } else {
-            System.out.println("Cyclic dependencies detected:");
+            System.err.println("Cyclic dependencies detected:");
             for (int i = 0; i < sccs.size(); i++) {
                 List<String> cycle = sccs.get(i);
-                System.out.println("  Cycle " + (i + 1) + ": " + 
+                System.err.println("  Cycle " + (i + 1) + ": " + 
                     formatCycle(cycle));
             }
         }

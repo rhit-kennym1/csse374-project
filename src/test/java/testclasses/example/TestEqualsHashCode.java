@@ -1,4 +1,5 @@
-package example;
+package testclasses.example;
+
 
 public class TestEqualsHashCode {
 
