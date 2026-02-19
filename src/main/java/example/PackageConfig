@@ -1,0 +1,6 @@
+# Package Configuration for Cyclic Dependency Analysis
+# Format: package.path (one per line)
+# The analyzer will load all .class files in the specified package directory
+
+# Test package with cyclic dependencies
+testclasses.example

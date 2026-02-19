@@ -18,6 +18,7 @@ public class LinterRegistry {
         register("ObserverPattern", ObserverPatternLinter::new);
         register("FeatureEnvy", FeatureEnvyLinter::new);
         register("AdapterPattern", PatternAdapterLinter::new);
+        register("CyclicDependency", CycleDependencyLinter::new);
         
     }
 
