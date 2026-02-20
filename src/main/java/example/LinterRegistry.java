@@ -14,22 +14,28 @@ public class LinterRegistry {
         register("EqualsHashCode", EqualsHashCodeLinter::new);
         register("DeadCode", DeadCodeLinter::new);
         register("UnusedVariables", UnusedVariablesLinter::new);
+        register("StrategyPattern", StrategyPatternLinter::new);
+        register("HollywoodPrinciple", HollywoodPrincipleLinter::new);
         register("OpenClosedPrinciple", OpenClosedPrincipleLinter::new);
         register("DecoratorPattern", DecoratorPatternLinter::new);
         register("DemeterPrinciple", LawOfDemeterPrinciple::new);
         register("ObserverPattern", ObserverPatternLinter::new);
         register("FeatureEnvy", FeatureEnvyLinter::new);
         register("AdapterPattern", PatternAdapterLinter::new);
-        
+        register("SingleResponsibilityPrinciple", SingleResponsibilityPrincipleLinter::new);
+
         // Register package-wide linters only
         registerPackageLinter("CyclicDependency", CycleDependencyLinter::new);
+        registerPackageLinter("DependencyInversionPrinciple", DependencyInversionPrincipleLinter::new);
+        registerPackageLinter("MissingImplementation", MissingImplementationLinter::new);
     }
 
     public static void register(String name, Function<ClassNode, Linter> constructor) {
         linters.put(name, constructor);
     }
 
-    public static void registerPackageLinter(String name, BiFunction<ClassNode, Map<String, ClassNode>, Linter> constructor) {
+    public static void registerPackageLinter(String name,
+            BiFunction<ClassNode, Map<String, ClassNode>, Linter> constructor) {
         packageLinters.put(name, constructor);
     }
 

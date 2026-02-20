@@ -2,7 +2,6 @@ package example;
 
 import java.util.*;
 
-import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldInsnNode;
@@ -22,12 +21,12 @@ public class SingleResponsibilityPrincipleLinter
     public SingleResponsibilityPrincipleLinter(ClassNode classNode) {
         this.classNode = classNode;
     }
-    
+
     @Override
     public LinterType getType() {
         return LinterType.PRINCIPLE;
     }
-    
+
     @Override
     public void lintClass() {
 
@@ -58,7 +57,13 @@ public class SingleResponsibilityPrincipleLinter
             for (AbstractInsnNode insn : m.instructions) {
                 if (insn instanceof MethodInsnNode) {
                     MethodInsnNode methodInsn = (MethodInsnNode) insn;
-                    deps.add(methodInsn.owner);
+                    String owner = methodInsn.owner;
+                    if (!owner.equals(classNode.name)
+                            && !owner.startsWith("java/")
+                            && !owner.startsWith("javax/")
+                            && !owner.startsWith("sun/")) {
+                        deps.add(owner);
+                    }
                 }
             }
         }
@@ -77,11 +82,15 @@ public class SingleResponsibilityPrincipleLinter
             for (AbstractInsnNode insn : m.instructions) {
                 if (insn instanceof FieldInsnNode) {
                     FieldInsnNode fieldInsn = (FieldInsnNode) insn;
-                    used.add(fieldInsn.name);
+                    if (fieldInsn.owner.equals(classNode.name)) {
+                        used.add(fieldInsn.name);
+                    }
                 }
             }
 
-            methodFieldUsage.put(m.name, used);
+            if (!used.isEmpty()) {
+                methodFieldUsage.put(m.name + m.desc, used);
+            }
         }
 
         int unrelatedPairs = 0;

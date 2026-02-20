@@ -17,7 +17,7 @@ public class MissingImplementationLinter implements Linter {
         this.classNode = classNode;
         this.classMap = classMap;
     }
-    
+
     @Override
     public LinterType getType() {
         return LinterType.CHECKSTYLE;
@@ -29,7 +29,7 @@ public class MissingImplementationLinter implements Linter {
             return;
 
         Set<String> required = new HashSet<>();
-        collectAbstractMethods(classNode, required);
+        collectAbstractMethods(classNode, required, new HashSet<>());
 
         Set<String> implemented = getImplementedMethods(classNode);
 
@@ -43,19 +43,24 @@ public class MissingImplementationLinter implements Linter {
         warnings.forEach(System.out::println);
     }
 
-    private void collectAbstractMethods(ClassNode node, Set<String> required) {
-        // interfaces
+    private void collectAbstractMethods(ClassNode node, Set<String> required, Set<String> visited) {
+        if (node == null || visited.contains(node.name))
+            return;
+        visited.add(node.name);
+
         for (String iface : node.interfaces) {
             ClassNode ifaceNode = classMap.get(iface);
             if (ifaceNode != null) {
                 for (MethodNode m : ifaceNode.methods) {
-                    required.add(sig(m));
+                    if ((m.access & Opcodes.ACC_ABSTRACT) != 0) {
+                        required.add(sig(m));
+                    }
                 }
+                collectAbstractMethods(ifaceNode, required, visited);
             }
         }
 
-        // parent abstract class
-        if (node.superName != null) {
+        if (node.superName != null && !node.superName.equals("java/lang/Object")) {
             ClassNode parent = classMap.get(node.superName);
             if (parent != null) {
                 for (MethodNode m : parent.methods) {
@@ -63,18 +68,32 @@ public class MissingImplementationLinter implements Linter {
                         required.add(sig(m));
                     }
                 }
+                collectAbstractMethods(parent, required, visited);
             }
         }
     }
 
     private Set<String> getImplementedMethods(ClassNode node) {
         Set<String> set = new HashSet<>();
+        collectImplemented(node, set, new HashSet<>());
+        return set;
+    }
+
+    private void collectImplemented(ClassNode node, Set<String> set, Set<String> visited) {
+        if (node == null || visited.contains(node.name))
+            return;
+        visited.add(node.name);
+
         for (MethodNode m : node.methods) {
             if ((m.access & Opcodes.ACC_ABSTRACT) == 0) {
                 set.add(sig(m));
             }
         }
-        return set;
+
+        if (node.superName != null && !node.superName.equals("java/lang/Object")) {
+            ClassNode parent = classMap.get(node.superName);
+            collectImplemented(parent, set, visited);
+        }
     }
 
     private boolean isAbstract(ClassNode node) {
