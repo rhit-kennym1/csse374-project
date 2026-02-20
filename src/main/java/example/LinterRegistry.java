@@ -23,16 +23,20 @@ public class LinterRegistry {
         register("FeatureEnvy", FeatureEnvyLinter::new);
         register("AdapterPattern", PatternAdapterLinter::new);
         register("TemporalCoupling", TemporalCouplingLinter::new);
-        
+        register("SingleResponsibilityPrinciple", SingleResponsibilityPrincipleLinter::new);
+
         // Register package-wide linters only
         registerPackageLinter("CyclicDependency", CycleDependencyLinter::new);
+        registerPackageLinter("DependencyInversionPrinciple", DependencyInversionPrincipleLinter::new);
+        registerPackageLinter("MissingImplementation", MissingImplementationLinter::new);
     }
 
     public static void register(String name, Function<ClassNode, Linter> constructor) {
         linters.put(name, constructor);
     }
 
-    public static void registerPackageLinter(String name, BiFunction<ClassNode, Map<String, ClassNode>, Linter> constructor) {
+    public static void registerPackageLinter(String name,
+            BiFunction<ClassNode, Map<String, ClassNode>, Linter> constructor) {
         packageLinters.put(name, constructor);
     }
 
