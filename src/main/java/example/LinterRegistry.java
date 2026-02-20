@@ -19,7 +19,7 @@ public class LinterRegistry {
         register("OpenClosedPrinciple", OpenClosedPrincipleLinter::new);
         register("DecoratorPattern", DecoratorPatternLinter::new);
         register("DemeterPrinciple", LawOfDemeterPrinciple::new);
-        register("ObserverPattern", ObserverPatternLinter::new);
+        registerPackageLinter("ObserverPattern", ObserverPatternLinter::new);
         register("FeatureEnvy", FeatureEnvyLinter::new);
         register("AdapterPattern", PatternAdapterLinter::new);
         register("TemporalCoupling", TemporalCouplingLinter::new);

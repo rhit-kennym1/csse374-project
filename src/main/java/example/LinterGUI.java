@@ -3,7 +3,6 @@ package example;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
-import java.awt.event.*;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
@@ -18,11 +17,16 @@ public class LinterGUI extends JFrame {
     private static final String CONFIG_PATH = "src/main/java/example/LinterConfig";
     private static final String DEFAULT_TEST_PATH = "src/test/resources/testclasses";
 
-    // Available linters
+    // Available linters - single class analysis
     private static final String[] SINGLE_CLASS_LINTERS = {
             "EqualsHashCode", "DeadCode", "UnusedVariables",
             "OpenClosedPrinciple", "DecoratorPattern", "DemeterPrinciple",
-            "ObserverPattern", "FeatureEnvy", "AdapterPattern"
+            "FeatureEnvy", "AdapterPattern", "SingleResponsibilityPrinciple"
+    };
+
+    // GROUP_CLASSES: linters - specific class list, processed together for context
+    private static final String[] GROUP_CLASS_LINTERS = {
+            "ObserverPattern", "DependencyInversionPrinciple", "MissingImplementation"
     };
 
     private static final String[] PACKAGE_LINTERS = {
@@ -39,6 +43,7 @@ public class LinterGUI extends JFrame {
     private JButton saveConfigButton;
     private JButton runAnalysisButton;
     private JCheckBox appendModeCheckBox;
+    private JLabel hintLabel;
 
     // Data
     private Map<String, List<String>> linterToTargets;
@@ -83,6 +88,7 @@ public class LinterGUI extends JFrame {
         // Combine all linters
         List<String> allLinters = new ArrayList<>();
         allLinters.addAll(Arrays.asList(SINGLE_CLASS_LINTERS));
+        allLinters.addAll(Arrays.asList(GROUP_CLASS_LINTERS));
         allLinters.addAll(Arrays.asList(PACKAGE_LINTERS));
 
         linterList = new JList<>(allLinters.toArray(new String[0]));
@@ -120,7 +126,20 @@ public class LinterGUI extends JFrame {
         fileButtonPanel.add(selectPackageButton);
         fileButtonPanel.add(clearButton);
 
-        filePanel.add(fileButtonPanel, BorderLayout.NORTH);
+        hintLabel = new JLabel(" ");
+        hintLabel.setFont(new Font(Font.SANS_SERIF, Font.ITALIC, 11));
+        hintLabel.setForeground(Color.DARK_GRAY);
+
+        linterList.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting())
+                updateHint(linterList.getSelectedValue());
+        });
+
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.add(fileButtonPanel, BorderLayout.NORTH);
+        topPanel.add(hintLabel, BorderLayout.SOUTH);
+
+        filePanel.add(topPanel, BorderLayout.NORTH);
         filePanel.add(fileScroll, BorderLayout.CENTER);
 
         // Bottom - Config preview
@@ -155,6 +174,20 @@ public class LinterGUI extends JFrame {
         panel.add(runAnalysisButton);
 
         return panel;
+    }
+
+    private void updateHint(String linter) {
+        if (linter == null) {
+            hintLabel.setText(" ");
+        } else if (Arrays.asList(PACKAGE_LINTERS).contains(linter)) {
+            hintLabel.setText("Use 'Select Package' to choose a directory to analyze.");
+        } else if (Arrays.asList(GROUP_CLASS_LINTERS).contains(linter)) {
+            hintLabel.setText(
+                    "Use 'Select Class Files' to pick one or more .class files from the same package. Processed together (simultaneously/grouped).");
+        } else {
+            hintLabel.setText(
+                    "Use 'Select Class Files' to pick one or more .class files. Processed individually (one at a time).");
+        }
     }
 
     private void selectClassFiles() {
@@ -194,7 +227,23 @@ public class LinterGUI extends JFrame {
             }
 
             if (!classNames.isEmpty()) {
-                linterToTargets.put(selectedLinter, classNames);
+                if (Arrays.asList(GROUP_CLASS_LINTERS).contains(selectedLinter)) {
+                    // Infer package from the parent directory of the selected files
+                    String packageName = dirToPackageName(selectedFiles[0].getParentFile());
+                    if (packageName == null) {
+                        JOptionPane.showMessageDialog(this,
+                                "Could not determine package from selected files.",
+                                "Error", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                    // First element carries GROUP_CLASSES:pkg: prefix; rest are plain class names
+                    List<String> targets = new ArrayList<>();
+                    targets.add("GROUP_CLASSES:" + packageName + ":" + classNames.get(0));
+                    targets.addAll(classNames.subList(1, classNames.size()));
+                    linterToTargets.put(selectedLinter, targets);
+                } else {
+                    linterToTargets.put(selectedLinter, classNames);
+                }
                 updateDisplays();
             }
         }
