@@ -14,12 +14,15 @@ public class LinterRegistry {
         register("EqualsHashCode", EqualsHashCodeLinter::new);
         register("DeadCode", DeadCodeLinter::new);
         register("UnusedVariables", UnusedVariablesLinter::new);
+        register("StrategyPattern", StrategyPatternLinter::new);
+        register("HollywoodPrinciple", HollywoodPrincipleLinter::new);
         register("OpenClosedPrinciple", OpenClosedPrincipleLinter::new);
         register("DecoratorPattern", DecoratorPatternLinter::new);
         register("DemeterPrinciple", LawOfDemeterPrinciple::new);
         register("ObserverPattern", ObserverPatternLinter::new);
         register("FeatureEnvy", FeatureEnvyLinter::new);
         register("AdapterPattern", PatternAdapterLinter::new);
+        register("TemporalCoupling", TemporalCouplingLinter::new);
         
         // Register package-wide linters only
         registerPackageLinter("CyclicDependency", CycleDependencyLinter::new);

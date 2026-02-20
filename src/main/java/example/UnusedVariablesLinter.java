@@ -20,7 +20,7 @@ public class UnusedVariablesLinter implements Linter {
 
         violations.addAll(findUnusedPrivateFields());
         violations.addAll(findUnusedPrivateMethods());
-//        violations.addAll(findUnusedLocals());
+        violations.addAll(findUnusedLocals());
 
         if (violations.isEmpty()) {
             System.out.println("No error in UnusedVariablesLinter for: " + classNode.name);
