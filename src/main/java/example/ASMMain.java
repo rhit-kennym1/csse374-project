@@ -93,7 +93,6 @@ public class ASMMain {
     private static ClassNode loadClass(String className) throws IOException {
         // Build the file path directly
         String classPath = "src/test/resources/" + className.replace('.', '/') + ".class";
-
         try {
             // Read the file directly from filesystem
             Path filePath = Paths.get(classPath);
