@@ -79,6 +79,7 @@ public class ASMMain {
             ClassNode classNode = loadClass(className);
 
             Linter linter = LinterRegistry.create(linterName, classNode);
+            System.out.println();
             System.out.println("Running " + linter.getType() + " linter: " + linterName + " on " + className);
             linter.lintClass();
 
