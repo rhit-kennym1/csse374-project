@@ -1,0 +1,249 @@
+@startuml
+!define LIGHTBLUE #E3F2FD
+!define LIGHTGREEN #E8F5E9
+!define LIGHTYELLOW #FFF9C4
+!define LIGHTPINK #FCE4EC
+
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 60
+
+' ==============================================================================
+' LEGEND - THREE LAYER ARCHITECTURE
+' ==============================================================================
+legend top left
+**Three-Layer Architecture**
+- **Presentation Layer**: ASMMain, LinterGUI
+- **Domain Layer**: Linter implementations
+- **Data Layer**: ASM integration
+endlegend
+
+' ==============================================================================
+' CORE COMPONENTS (TOP)
+' ==============================================================================
+
+enum LinterType {
+  CHECKSTYLE
+  PRINCIPLE
+  PATTERN
+}
+
+note right of LinterType
+  **Semantic Clarity**
+  No branching logic depends on
+  this enum, purely informational
+  so users understand the kind
+  of check being run
+end note
+
+interface Linter {
+  + lintClass()
+  + getType(): LinterType
+  + isPerClass(): boolean
+}
+
+note right of Linter
+  **Strategy Pattern**
+  All 16 linters implement this
+  interface. High-level modules
+  depend on this abstraction, not
+  concrete classes (DIP). Adding a
+  new linter never requires modifying
+  existing code (OCP). Each linter
+  class has one specific checking
+  responsibility (SRP).
+end note
+
+class LinterRegistry {
+  - {static} linters: Map
+  - {static} packageLinters: Map
+  + {static} register()
+  + {static} registerPackageLinter()
+  + {static} create(): Linter
+  + {static} createPackageLinter(): Linter
+}
+
+note bottom of LinterRegistry
+  **Registry Pattern**
+  Sole responsibility: instantiate
+  and run linters by calling
+  lintClass() polymorphically.
+  Supports per-class, group, and
+  package-wide analysis modes.
+end note
+
+class ASMMain {
+  - {static} CONFIG_PATH: String
+  + {static} main(args[])
+  - {static} processConfigLine()
+  - {static} runLinter()
+  - {static} runPackageAnalysis()
+  - {static} loadClass(): ClassNode
+}
+
+note right of ASMMain
+  **Presentation Layer + SRP**
+  Sole responsibility: parse the
+  config file and delegate to
+  LinterRegistry. Config format:
+  linter name followed by list
+  of target classes.
+end note
+
+class LinterGUI {
+  - linterList: JList
+  - configPreviewArea: JTextArea
+  + main(args[])
+  - selectClassFiles()
+  - saveConfiguration()
+}
+
+note left of LinterGUI
+  **Presentation Layer + SRP**
+  Sole responsibility: user interaction.
+  Generates the config file consumed
+  by ASMMain, decoupled from all
+  linting logic.
+end note
+
+' ==============================================================================
+' LINTER IMPLEMENTATIONS (ARRANGED IN GROUPS)
+' ==============================================================================
+
+together {
+  class EqualsHashCodeLinter LIGHTBLUE {
+    - classNode: ClassNode
+  }
+  class UnusedVariablesLinter LIGHTBLUE {
+    - classNode: ClassNode
+  }
+  class DeadCodeLinter LIGHTBLUE {
+    - classNode: ClassNode
+  }
+  class MissingImplementationLinter LIGHTBLUE {
+    - classNode: ClassNode
+    - allClasses: Map
+  }
+}
+
+note top of EqualsHashCodeLinter
+  **CHECKSTYLE linters**
+  Per-class bytecode checks.
+end note
+
+together {
+  class HollywoodPrincipleLinter LIGHTGREEN {
+    - classNode: ClassNode
+  }
+  class OpenClosedPrincipleLinter LIGHTGREEN {
+    - classNode: ClassNode
+  }
+  class SingleResponsibilityPrincipleLinter LIGHTGREEN {
+    - classNode: ClassNode
+  }
+  class LawOfDemeterPrinciple LIGHTGREEN {
+    - classNode: ClassNode
+  }
+}
+
+note top of HollywoodPrincipleLinter
+  **PRINCIPLE linters**
+  Per-class design principle checks.
+end note
+
+together {
+  class CycleDependencyLinter LIGHTPINK {
+    - classNode: ClassNode
+    - allClasses: Map
+    - index: int
+    - stack: Stack
+    + buildDependencyGraph()
+    + tarjanDFS()
+  }
+  class FeatureEnvyLinter LIGHTPINK {
+    - classNode: ClassNode
+    - allClasses: Map
+    + analyzeMethodFeatureEnvy()
+  }
+  class TemporalCouplingLinter LIGHTPINK {
+    - classNode: ClassNode
+    + checkForTemporalCoupling()
+  }
+  class DependencyInversionPrincipleLinter LIGHTPINK {
+    - classNode: ClassNode
+    - allClasses: Map
+    + buildDependencyGraph()
+  }
+}
+
+note top of CycleDependencyLinter
+  **Advanced linters**
+  A-level features
+end note
+
+together {
+  class DecoratorPatternLinter LIGHTYELLOW {
+    - classNode: ClassNode
+  }
+  class StrategyPatternLinter LIGHTYELLOW {
+    - classNode: ClassNode
+  }
+  class ObserverPatternLinter LIGHTYELLOW {
+    - classNode: ClassNode
+    - allClasses: Map
+  }
+  class PatternAdapterLinter LIGHTYELLOW {
+    - classNode: ClassNode
+  }
+}
+
+note top of DecoratorPatternLinter
+  **PATTERN linters**
+  Per-class design pattern checks.
+end note
+
+' ==============================================================================
+' RELATIONSHIPS
+' ==============================================================================
+
+ASMMain -right-> LinterRegistry : uses
+LinterGUI -up-> ASMMain : invokes
+LinterRegistry .down.> Linter : creates
+Linter -right-> LinterType : categorizes
+
+' Checkstyle linters
+Linter <|.. EqualsHashCodeLinter
+Linter <|.. UnusedVariablesLinter
+Linter <|.. DeadCodeLinter
+Linter <|.. MissingImplementationLinter
+
+' Principle linters
+Linter <|.. HollywoodPrincipleLinter
+Linter <|.. OpenClosedPrincipleLinter
+Linter <|.. SingleResponsibilityPrincipleLinter
+Linter <|.. LawOfDemeterPrinciple
+
+' A-Level linters
+Linter <|.. CycleDependencyLinter
+Linter <|.. FeatureEnvyLinter
+Linter <|.. TemporalCouplingLinter
+Linter <|.. DependencyInversionPrincipleLinter
+
+' Pattern linters
+Linter <|.. DecoratorPatternLinter
+Linter <|.. StrategyPatternLinter
+Linter <|.. ObserverPatternLinter
+Linter <|.. PatternAdapterLinter
+
+' ==============================================================================
+' NOTES
+' ==============================================================================
+
+note bottom of LinterGUI
+  **Data Layer**
+  Bytecode of target classes stored
+  in resources folder; parsed via ASM
+  and passed to linters as ClassNode.
+end note
+
+@enduml
