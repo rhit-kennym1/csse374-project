@@ -2,6 +2,7 @@
 #Linter checks are EqualsHashCode... (TODO add all linter checks in this line)
 
 EqualsHashCode: testclasses.example.TestEqualsHashCode
+DeadCode: testclasses.example.TestDeadCode, testclasses.example.TestNoDeadCode
 DemeterPrinciple: testclasses.example.TestLawOfDemeter
 ObserverPattern: GROUP_CLASSES:testclasses.example:testclasses.example.TestObserverPattern$WeatherStation, testclasses.example.TestObserverPattern$StockMarket, testclasses.example.TestObserverPattern$EventManager, testclasses.example.TestObserverPattern$LeakyBroadcaster, testclasses.example.TestObserverPattern$TemperatureDisplay, testclasses.example.TestObserverPattern$AlertSystem, testclasses.example.TestObserverPattern$JustAListHolder, testclasses.example.TestObserverPattern$SingleObserverCaller
 DecoratorPattern: testclasses.example.TestDecoratorPattern$ValidDecorator, testclasses.example.TestDecoratorPattern$BadDecoratorPublic, testclasses.example.TestDecoratorPattern$BadDecoratorNonFinal, testclasses.example.TestDecoratorPattern$BadDecoratorNoConstructor, testclasses.example.TestDecoratorPattern$BadDecoratorWrongInterface
