@@ -10,7 +10,7 @@ package testclasses.example;
 public class TestUnusedLocalVariables {
 
     public TestUnusedLocalVariables() {
-        // SHOULD TRIGGER: stored but never loaded
+        // TRIGGER: stored but never loaded
         int unusedLocalInCtor = 42;
 
         // SHOULD NOT TRIGGER: used
@@ -19,7 +19,7 @@ public class TestUnusedLocalVariables {
     }
 
     public void doWork() {
-        // SHOULD TRIGGER: stored but never loaded
+        // TRIGGER: stored but never loaded
         String unusedLocalInMethod = "hello";
 
         // SHOULD NOT TRIGGER: used

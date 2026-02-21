@@ -11,7 +11,7 @@ import java.util.List;
  *  - getter-like calls (>= 8): getX/isX/hasX
  *  - condition count (>= 6): if/switch
  *
- * SHOULD TRIGGER:
+ * TRIGGER:
  *  - Orchestrator.orchestrate(): high NEW + high getters + high conditions
  *
  * SHOULD NOT TRIGGER:
@@ -21,7 +21,7 @@ import java.util.List;
 public class TestHollywoodPrinciple {
 
     // ----------------------------
-    // SHOULD TRIGGER
+    // TRIGGER
     // ----------------------------
     class Orchestrator {
         private final Model model = new Model();

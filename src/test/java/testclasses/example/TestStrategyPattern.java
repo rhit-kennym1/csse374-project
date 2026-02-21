@@ -42,7 +42,7 @@ public class TestStrategyPattern {
         }
     }
 
-    // -------------------- SHOULD TRIGGER #1 --------------------
+    // -------------------- TRIGGER #1 --------------------
     static class CheckoutContextCtor {
         private final PaymentStrategy strategy;
 
@@ -56,7 +56,7 @@ public class TestStrategyPattern {
         }
     }
 
-    // -------------------- SHOULD TRIGGER #2 --------------------
+    // -------------------- TRIGGER #2 --------------------
     static class CheckoutContextSetter {
         private PaymentStrategy strategy;
 

@@ -22,6 +22,7 @@ public class TestUnusedVariables {
 
         writeOnlyPrivateField = 777;
 
+        // TRIGGER
         int unusedLocalInCtor = 999;
 
         int usedLocalInCtor = 10;
@@ -32,6 +33,9 @@ public class TestUnusedVariables {
         System.out.println("usedPrivateField=" + usedPrivateField);
         System.out.println("names size=" + names.size());
 
+        //TRIGGER
+        int unusedLocalInMethod = 2;
+        
         // SHOULD NOT TRIGGER
         int usedLocal = 5;
         System.out.println(usedLocal);
@@ -51,6 +55,11 @@ public class TestUnusedVariables {
     // SHOULD NOT TRIGGER
     private void usedPrivateMethod() {
         System.out.println("I am called");
+    }
+    
+    //TRIGGER
+    private void unusedPrivateMethod() {
+        System.out.println("I am not called");
     }
 
 

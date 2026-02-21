@@ -25,7 +25,7 @@ public class TestUnusedPrivateMethod {
         System.out.println("used");
     }
 
-    // SHOULD TRIGGER: never called
+    // TRIGGER: never called
     private void unusedHelper() {
         System.out.println("unused");
     }
